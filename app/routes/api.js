@@ -422,7 +422,7 @@ router.post('/authenticate', function (req, res) {
                                 to: user.email,
                                 subject: 'Forgot Password Request',
                                 text: 'Hello '+ user.name + 'You request for the forgot password.Please find the below link Reset password Thank you Arpit Jaswal ',
-                                html: 'Hello <strong>'+ user.name + '</strong>,<br><br>You requested for the forgot password. Please find the below link<br><br><a href="http://mentormewinterinternship2023/forgotPassword/'+ user.temporarytoken+'">Reset password</a><br><br>Thank you<br>Arpit Jaswal<br>'
+                                html: 'Hello <strong>'+ user.name + '</strong>,<br><br>You requested for the forgot password. Please find the below link<br><br><a href="http://mentormewinterinternship2023.onrender.com/forgotPassword/'+ user.temporarytoken+'">Reset password</a><br><br>Thank you<br>Arpit Jaswal<br>'
                             };
 
                             client.sendMail(email, function(err, info){
