@@ -95,7 +95,7 @@ module.exports = function (router, io){
                         to: user.email,
                         subject: 'Activation Link - MentorMe Registration',
                         text: 'Hello '+ user.name + 'Thank you for registering with us.Please find the below activation link Activation link Thank you Arpit Jaswal',
-                        html: 'Hello <strong>'+ user.name + '</strong>,<br><br>Thank you for registering with us.Please find the below activation link<br><br><a href="http://localhost:8000/activate/'+ user.temporarytoken+'">Activation link</a><br><br>Thank you<br>Arpit Jaswal'
+                        html: 'Hello <strong>'+ user.name + '</strong>,<br><br>Thank you for registering with us.Please find the below activation link<br><br><a href="http://mentormewinterinternship2023/activate/'+ user.temporarytoken+'">Activation link</a><br><br>Thank you<br>Arpit Jaswal'
                     };
 
                     client.sendMail(email, function(err, info){
