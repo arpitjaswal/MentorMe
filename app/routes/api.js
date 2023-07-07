@@ -9,113 +9,91 @@ var secret = 'MentorMe';
 var nodemailer = require('nodemailer');
 
 module.exports = function (router, io){
+// Nodemailer and Gmail service setup
+var nodemailer = require('nodemailer');
+var transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'winterinternship2023@gmail.com',
+    pass: 'xxqsotuhxrfptgqj'
+  }
+});
 
-    // Nodemailer-sandgrid stuff
-    var client = nodemailer.createTransport({
-        service : 'gmail',
-        auth: {
-            user: 'winterinternship2023@gmail.com',
-            pass: 'xxqsotuhxrfptgqj'
-        }
+// User register API
+router.post('/register', function (req, res) {
+  var user = new User();
+
+  user.name = req.body.name;
+  user.username = req.body.username;
+  user.email = req.body.email;
+  user.password = req.body.password;
+  user.temporarytoken = jwt.sign({ email: user.email, username: user.username }, secret, { expiresIn: '24h' });
+
+  if (!user.name || !user.email || !user.password || !user.username) {
+    res.json({
+      success: false,
+      message: 'Ensure you fill all entries!'
     });
-
-    // User register API
-    router.post('/register',function (req, res) {
-        var user = new User();
-
-        user.name = req.body.name;
-        user.username = req.body.username;
-        user.email = req.body.email;
-        user.password = req.body.password;
-        user.temporarytoken = jwt.sign({ email : user.email , username : user.username }, secret , { expiresIn : '24h' });
-
-        //console.log(req.body);
-        if(!user.name || !user.email || !user.password || !user.username) {
+  } else {
+    user.save(function (err) {
+      if (err) {
+        if (err.name === 'ValidationError') {
+          // Handle validation errors
+          res.json({
+            success: false,
+            message: err.message
+          });
+        } else if (err.code === 11000) {
+          // Handle duplication errors
+          if (err.keyPattern.email) {
             res.json({
-                success : false,
-                message : 'Ensure you filled all entries!'
+              success: false,
+              message: 'Email is already registered.'
             });
+          } else if (err.keyPattern.username) {
+            res.json({
+              success: false,
+              message: 'Username is already registered.'
+            });
+          } else {
+            res.json({
+              success: false,
+              message: 'Duplicate key error.'
+            });
+          }
         } else {
-            user.save(function(err) {
-                if(err) {
-                    if(err.errors != null) {
-                        // validation errors
-                        if(err.errors.name) {
-                            res.json({
-                                success: false,
-                                message: err.errors.name.message
-                            });
-                        } else if (err.errors.email) {
-                            res.json({
-                                success : false,
-                                message : err.errors.email.message
-                            });
-                        } else if(err.errors.password) {
-                            res.json({
-                                success : false,
-                                message : err.errors.password.message
-                            });
-                        } else {
-                            res.json({
-                                success : false,
-                                message : err
-                            });
-                        }
-                    } else {
-                        // duplication errors
-                        if(err.code === 11000) {
-                            //console.log(err.errmsg);
-                            if(err.errmsg[57] === 'e') {
-                                res.json({
-                                    success: false,
-                                    message: 'Email is already registered.'
-                                });
-                            } else if(err.errmsg[57] === 'u') {
-                                res.json({
-                                    success : false,
-                                    message : 'Username is already registered.'
-                                });
-                            } else {
-                                res.json({
-                                    success : false,
-                                    message : err
-                                });
-                            }
-                        } else {
-                            res.json({
-                                success: false,
-                                message: err
-                            })
-                        }
-                    }
-                } else {
-
-                    var email = {
-                        from: '"MentorMe Registration", <support@mentorme.com>',
-                        to: user.email,
-                        subject: 'Activation Link - MentorMe Registration',
-                        text: 'Hello '+ user.name + 'Thank you for registering with us.Please find the below activation link Activation link Thank you Arpit Jaswal',
-                        html: 'Hello <strong>'+ user.name + '</strong>,<br><br>Thank you for registering with us.Please find the below activation link<br><br><a href="http://mentormewinterinternship2023.onrender.com/activate/'+ user.temporarytoken+'">Activation link</a><br><br>Thank you<br>Arpit Jaswal'
-                    };
-
-                    client.sendMail(email, function(err, info){
-                        if (err ){
-                            console.log(err);
-                        }
-                        else {
-                            console.log('Message sent: ' + info.response);
-                        }
-                    });
-
-
-                    res.json({
-                        success : true,
-                        message : 'Account registered! Please check your E-mail inbox for the activation link.'
-                    });
-                }
-            });
+          // Handle other types of errors
+          res.json({
+            success: false,
+            message: err.message
+          });
         }
+      } else {
+        // Registration successful
+        var email = {
+          from: 'MentorMe Registration <support@mentorme.com>',
+          to: user.email,
+          subject: 'Activation Link - MentorMe Registration',
+          text: 'Hello ' + user.name + ',\n\nThank you for registering with us. Please find the activation link below:\n\nActivation link: http://mentormewinterinternship2023.onrender.com/activate/' + user.temporarytoken + '\n\nThank you,\nArpit Jaswal'
+        };
+
+        transporter.sendMail(email, function (err, info) {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log('Message sent: ' + info.response);
+          }
+        });
+
+        res.json({
+          success: true,
+          message: 'Account registered! Please check your email inbox for the activation link.'
+        });
+      }
     });
+  }
+});
+
 
     // User login API
 router.post('/authenticate', function (req, res) {
