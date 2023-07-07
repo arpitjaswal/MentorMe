@@ -55,19 +55,19 @@ router.post('/register', function (req, res) {
               success: false,
               message: 'Username is already registered.'
             });
-          } else {
-            res.json({
-              success: false,
-              message: 'Duplicate key error.'
-            });
-          }
-        } else {
-          // Handle other types of errors
-          res.json({
-            success: false,
-            message: err.message
-          });
-        }
+        //   } else {
+        //     res.json({
+        //       success: false,
+        //       message: 'Duplicate key error.'
+        //     });
+        //   }
+        // } else {
+        //   // Handle other types of errors
+        //   res.json({
+        //     success: false,
+        //     message: err.message
+        //   });
+        // }
       } else {
         // Registration successful
         var email = {
