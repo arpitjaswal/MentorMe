@@ -19,13 +19,17 @@ app.use(express.static(__dirname + '/public'));
 // to differentiate between backend and front end routes
 app.use('/api',appRoutes);
 
-mongoose.connect('mongodb+srv://admin:admin@cluster0.aftenfl.mongodb.net/ptalks',  { useNewUrlParser: true }, function (err) {
-    if(err) {
-        console.log('Error in connecting to database '+err);
-    } else {
+mongoose.connect(
+    'mongodb+srv://admin:admin@cluster0.aftenfl.mongodb.net/ptalks',
+    { useNewUrlParser: true, useUnifiedTopology: true }, // Add useUnifiedTopology option
+    function (err) {
+      if (err) {
+        console.log('Error in connecting to database ' + err);
+      } else {
         console.log('Successfully connected to database.');
+      }
     }
-});
+  );
 /*
 mongoose.connect(conString, { useNewUrlParser: true }, () => {
     console.log("DB is connected");
