@@ -1,0 +1,46 @@
+<div class="text-center">
+    <h1>
+        Placement Guide Portal
+    </h1>
+    <p><i>Let's check where you stand !</i></p>
+</div>
+
+<br>
+<div class="row">
+    <div class="col-sm-4 guide-div" ng-repeat="problem in guide.guideData">
+        <div class="panel-group">
+            <div class="panel panel-info">
+                <div class="panel-heading">{{ problem.heading }} </div>
+                <div class="panel-body" style="height: 250px;">
+                    <span class="label label-info author">{{ problem.tag }}</span>
+                    <span class="label label-primary author"> Level : {{ problem.level }}</span>
+                    <br>
+                    {{ problem.content }}
+                </div>
+                <div class="panel-footer">
+                    <a href="{{problem.link}}" target="_blank">
+                        <button class="btn btn-success">Solve Now</button>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="text-center">
+        <form ng-submit="guide.solvedProblem(problemData);">
+            <select ng-model="problemData.solve" style="background-color: transparent;padding: 5px;margin-left: 5px;" required>
+                <option value=1>
+                    1
+                </option>
+                <option value=2>
+                    2
+                </option>
+                <option value=3>
+                    3
+                </option>
+            </select>
+            <button class="btn btn-primary" type="submit">Solved {{problemData.solvecd }} Questions </button>
+        </form>
+
+    </div>
+</div>
+
