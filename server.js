@@ -20,7 +20,7 @@ app.use(express.static(__dirname + '/public'));
 app.use('/api',appRoutes);
 
 mongoose.connect(
-    'mongodb+srv://admin:admin@cluster0.aftenfl.mongodb.net/ptalks',
+    'mongodb+srv://admin:admin@cluster0.aftenfl.mongodb.net/mentorme',
     { useNewUrlParser: true, useUnifiedTopology: true }, // Add useUnifiedTopology option
     function (err) {
       if (err) {
