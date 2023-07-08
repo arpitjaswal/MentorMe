@@ -9,210 +9,233 @@ var secret = 'MentorMe';
 var nodemailer = require('nodemailer');
 
 module.exports = function (router, io){
-// Nodemailer and Gmail service setup
-var nodemailer = require('nodemailer');
-var transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: 'winterinternship2023@gmail.com',
-    pass: 'xxqsotuhxrfptgqj'
-  }
-});
-// User register API
-router.post('/register', function (req, res) {
-    var user = new User();
-  
-    user.name = req.body.name;
-    user.username = req.body.username;
-    user.email = req.body.email;
-    user.password = req.body.password;
-    user.temporarytoken = jwt.sign({ email: user.email, username: user.username }, secret, { expiresIn: '24h' });
-  
-    if (!user.name || !user.email || !user.password || !user.username) {
-      res.json({
-        success: false,
-        message: 'Ensure you fill all entries!'
-      });
-    } else {
-      user.save(function (err) {
-        if (err) {
-          if (err.name === 'ValidationError') {
-            // Handle validation errors
-            res.json({
-              success: false,
-              message: err.message
-            });
-          } else if (err.code === 11000) {
-            // Handle duplication errors
-            if (err.keyPattern.email) {
-              res.json({
-                success: false,
-                message: 'Email is already registered.'
-              });
-            } else if (err.keyPattern.username) {
-              res.json({
-                success: false,
-                message: 'Username is already registered.'
-              });
-            }
-          } else {
-            // Handle other types of errors
-            res.json({
-              success: false,
-              message: err.message
-            });
-          }
-        } else {
-          // Registration successful
-          var email = {
-            from: 'MentorMe Registration <support@mentorme.com>',
-            to: user.email,
-            subject: 'Activation Link - MentorMe Registration',
-            text: 'Hello ' + user.name + ',\n\nThank you for registering with us. Please find the activation link below:\n\nActivation link: http://mentormewinterinternship2023.onrender.com/activate/' + user.temporarytoken + '\n\nThank you,\nArpit Jaswal'
-          };
-  
-          transporter.sendMail(email, function (err, info) {
-            if (err) {
-              console.log(err);
-            } else {
-              console.log('Message sent: ' + info.response);
-            }
-          });
-  
-          res.json({
-            success: true,
-            message: 'Account registered! Please check your email inbox for the activation link.'
-          });
-        }
-      });
-    }
-  });
-  
 
+    // Nodemailer-sandgrid stuff
+    var client = nodemailer.createTransport({
+        service : 'gmail',
+        auth: {
+            user: 'winterinternship2023@gmail.com',
+            pass: 'xxqsotuhxrfptgqj'
+        }
+    });
+
+    // User register API
+    router.post('/register',function (req, res) {
+        var user = new User();
+
+        user.name = req.body.name;
+        user.username = req.body.username;
+        user.email = req.body.email;
+        user.password = req.body.password;
+        user.temporarytoken = jwt.sign({ email : user.email , username : user.username }, secret , { expiresIn : '24h' });
+
+        //console.log(req.body);
+        if(!user.name || !user.email || !user.password || !user.username) {
+            res.json({
+                success : false,
+                message : 'Ensure you filled all entries!'
+            });
+        } else {
+            user.save(function(err) {
+                if(err) {
+                    if(err.errors != null) {
+                        // validation errors
+                        if(err.errors.name) {
+                            res.json({
+                                success: false,
+                                message: err.errors.name.message
+                            });
+                        } else if (err.errors.email) {
+                            res.json({
+                                success : false,
+                                message : err.errors.email.message
+                            });
+                        } else if(err.errors.password) {
+                            res.json({
+                                success : false,
+                                message : err.errors.password.message
+                            });
+                        } else {
+                            res.json({
+                                success : false,
+                                message : err
+                            });
+                        }
+                    } else {
+                        // duplication errors
+                        if (err.code === 11000) {
+                            if (err.keyPattern && err.keyPattern.email) {
+                                res.json({
+                                    success: false,
+                                    message: 'Email is already registered.'
+                                });
+                            } else if (err.keyPattern && err.keyPattern.username) {
+                                res.json({
+                                    success: false,
+                                    message: 'Username is already registered.'
+                                });
+                            } else {
+                                res.json({
+                                    success: false,
+                                    message: err
+                                });
+                            }
+                        } else {
+                            res.json({
+                                success: false,
+                                message: err
+                            });
+                        }
+                        
+                    }
+                } else {
+
+                    var email = {
+                        from: '"MentorMe Registration", <support@mentorme.com>',
+                        to: user.email,
+                        subject: 'Activation Link - MentorMe Registration',
+                        text: 'Hello '+ user.name + 'Thank you for registering with us.Please find the below activation link Activation link Thank you Arpit Jaswal',
+                        html: 'Hello <strong>'+ user.name + '</strong>,<br><br>Thank you for registering with us.Please find the below activation link<br><br><a href="http://winterinternship2023.onrender.com/activate/'+ user.temporarytoken+'">Activation link</a><br><br>Thank you<br>Arpit Jaswal'
+                    };
+
+                    client.sendMail(email, function(err, info){
+                        if (err ){
+                            console.log(err);
+                        }
+                        else {
+                            console.log('Message sent: ' + info.response);
+                        }
+                    });
+
+
+                    res.json({
+                        success : true,
+                        message : 'Account registered! Please check your E-mail inbox for the activation link.'
+                    });
+                }
+            });
+        }
+    });
 
     // User login API
-router.post('/authenticate', function (req, res) {
-    if (!req.body.username || !req.body.password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide both username and password.'
-      });
-    }
-  
-    User.findOne({ username: req.body.username }).select('email username password active').exec(function (err, user) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({
-          success: false,
-          message: 'An error occurred while searching for the user.'
-        });
-      }
-  
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found. Please sign up!'
-        });
-      }
-  
-      if (!user.active) {
-        return res.status(401).json({
-          success: false,
-          message: 'Account is not activated yet. Please check your email for the activation link.',
-          expired: true
-        });
-      }
-  
-      var validPassword = user.comparePassword(req.body.password);
-  
-      if (!validPassword) {
-        return res.status(401).json({
-          success: false,
-          message: 'Incorrect password. Please try again.'
-        });
-      }
-  
-      var token = jwt.sign({ email: user.email, username: user.username }, secret, { expiresIn: '24h' });
-  
-      return res.json({
-        success: true,
-        message: 'User authenticated.',
-        token: token
-      });
-    });
-  });
-  
-  router.put('/activate/:token', function (req, res) {
-    if (!req.params.token) {
-      return res.status(400).json({
-        success: false,
-        message: 'No token provided.'
-      });
-    }
-  
-    User.findOne({ temporarytoken: req.params.token }, function (err, user) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({
-          success: false,
-          message: 'An error occurred while searching for the user.'
-        });
-      }
-  
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'Activation link has expired or is invalid.'
-        });
-      }
-  
-      var token = req.params.token;
-  
-      jwt.verify(token, secret, function (err, decoded) {
-        if (err) {
-          return res.status(401).json({
-            success: false,
-            message: 'Activation link has expired or is invalid.'
-          });
-        }
-  
-        user.temporarytoken = false;
-        user.active = true;
-  
-        user.save(function (err) {
-          if (err) {
-            console.error(err);
-            return res.status(500).json({
-              success: false,
-              message: 'An error occurred while saving the user.'
+    router.post('/authenticate', function (req,res) {
+
+        if(!req.body.username || !req.body.password) {
+            res.json({
+                success : false,
+                message : 'Ensure you fill all the entries.'
             });
-          }
-  
-          var email = {
-            from: 'MentorMe Registration, support@MentorMe.com',
-            to: user.email,
-            subject: 'Account Activated',
-            text: 'Hello ' + user.name + ', Your account has been activated. Thank you, Arpit Jaswal',
-            html: 'Hello <strong>' + user.name + '</strong>,<br><br>Your account has been activated.<br><br>Thank you,<br>Arpit Jaswal'
-          };
-  
-          client.sendMail(email, function (err, info) {
-            if (err) {
-              console.error(err);
-            } else {
-              console.log('Message sent: ' + info.response);
-            }
-          });
-  
-          return res.json({
-            success: true,
-            message: 'Account activated.'
-          });
-        });
-      });
+        } else {
+
+            User.findOne({ username : req.body.username }).select('email username password active').exec(function (err, user) {
+
+                if(err) throw err;
+
+                if(!user) {
+                    res.json({
+                        success : false,
+                        message : 'User not found. Please Signup!'
+                    });
+                } else if(user) {
+
+                    if(!user.active) {
+                        res.json({
+                            success : false,
+                            message : 'Account is not activated yet.Please check your email for activation link.',
+                            expired : true
+                        });
+                    } else {
+
+                        var validPassword = user.comparePassword(req.body.password);
+
+                        if (validPassword) {
+                            var token = jwt.sign({
+                                email: user.email,
+                                username: user.username
+                            }, secret, {expiresIn: '24h'});
+                            res.json({
+                                success: true,
+                                message: 'User authenticated.',
+                                token: token
+                            });
+                        } else {
+                            res.json({
+                                success: false,
+                                message: 'Incorrect password. Please try again.'
+                            });
+                        }
+                    }
+                }
+            });
+        }
+
     });
-  });
-  
+
+    router.put('/activate/:token', function (req,res) {
+
+        if(!req.params.token) {
+            res.json({
+                success : false,
+                message : 'No token provided.'
+            });
+        } else {
+
+            User.findOne({temporarytoken: req.params.token}, function (err, user) {
+                if (err) throw err;
+
+                var token = req.params.token;
+
+                jwt.verify(token, secret, function (err, decoded) {
+                    if (err) {
+                        res.json({
+                            success: false,
+                            message: 'Activation link has been expired.'
+                        })
+                    }
+                    else if (!user) {
+                        res.json({
+                            success: false,
+                            message: 'Activation link has been expired.'
+                        });
+                    } else {
+
+                        user.temporarytoken = false;
+                        user.active = true;
+
+                        user.save(function (err) {
+                            if (err) {
+                                console.log(err);
+                            } else {
+
+                                var email = {
+                                    from: 'MentorMe Registration, support@MentorMe.com',
+                                    to: user.email,
+                                    subject: 'Activation activated',
+                                    text: 'Hello ' + user.name + 'Your account has been activated.Thank you Arpit Jaswal ',
+                                    html: 'Hello <strong>' + user.name + '</strong>,<br><br> Your account has been activated.<br><br>Thank you<br>Arpit Jaswal<br>'
+                                };
+
+                                client.sendMail(email, function (err, info) {
+                                    if (err) {
+                                        console.log(err);
+                                    }
+                                    else {
+                                        console.log('Message sent: ' + info.response);
+                                    }
+                                });
+
+                                res.json({
+                                    success: true,
+                                    message: 'Account activated.'
+                                })
+
+                            }
+                        });
+                    }
+                });
+            })
+        }
+    });
 
     // Resend activation link
     router.post('/resend', function (req,res) {
@@ -395,7 +418,7 @@ router.post('/authenticate', function (req, res) {
                                 to: user.email,
                                 subject: 'Forgot Password Request',
                                 text: 'Hello '+ user.name + 'You request for the forgot password.Please find the below link Reset password Thank you Arpit Jaswal ',
-                                html: 'Hello <strong>'+ user.name + '</strong>,<br><br>You requested for the forgot password. Please find the below link<br><br><a href="http://mentormewinterinternship2023.onrender.com/forgotPassword/'+ user.temporarytoken+'">Reset password</a><br><br>Thank you<br>Arpit Jaswal<br>'
+                                html: 'Hello <strong>'+ user.name + '</strong>,<br><br>You requested for the forgot password. Please find the below link<br><br><a href="http://winterinternship2023.onrender.com/forgotPassword/'+ user.temporarytoken+'">Reset password</a><br><br>Thank you<br>Arpit Jaswal<br>'
                             };
 
                             client.sendMail(email, function(err, info){
