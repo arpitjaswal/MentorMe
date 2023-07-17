@@ -14,7 +14,7 @@
     "express": "^4.16.3",
     "intro.js": "^2.9.3",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^5.2.6",
+    "mongoose": "^5.13.20",
     "mongoose-title-case": "0.0.4",
     "mongoose-validator": "^2.1.0",
     "morgan": "^1.9.0",
